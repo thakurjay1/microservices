@@ -1,0 +1,6 @@
+server:
+  port: 9497
+  
+spring:
+  application:
+    name: API-GATEWAY

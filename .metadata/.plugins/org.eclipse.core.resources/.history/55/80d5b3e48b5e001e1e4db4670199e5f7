@@ -1,0 +1,85 @@
+package com.lcwd.user.service.services.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import com.lcwd.user.service.entities.Rating;
+import com.lcwd.user.service.entities.User;
+import com.lcwd.user.service.exceptions.ResourceNotFoundException;
+import com.lcwd.user.service.repositories.UserRepository;
+import com.lcwd.user.service.services.UserService;
+
+@Service
+public class UserServiceImpl implements UserService{
+	
+	@Autowired
+	private RestTemplate restTemplate;
+	
+	@Autowired
+	private UserRepository userRepository;
+	
+	private Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+
+	@Override
+	public User saveUser(User user) {
+		// TODO Auto-generated method stub
+		
+		// Generate Unique userId
+		String randomUserId = UUID.randomUUID().toString();
+		user.setUserId(randomUserId);
+		User savedUser = this.userRepository.save(user);
+		return savedUser;
+	}
+
+	@Override
+	public List<User> getAllUsers() {
+		// TODO Auto-generated method stub
+		// Implements rating service call using RestTemplate
+		List<User> allUsers = this.userRepository.findAll();
+		allUsers.forEach((user)->{
+			ArrayList<Rating> ratingsOfUser = restTemplate.getForObject("http://localhost:9496/ratings/users/"+user.getUserId(), ArrayList.class);
+			logger.info("{}", ratingsOfUser);
+			user.setRatings(ratingsOfUser);
+		});
+		return allUsers;
+	}
+
+	@Override
+	public User getUser(String userId) {
+		// TODO Auto-generated method stub
+	 User user = userRepository.findById(userId).orElseThrow(()->new ResourceNotFoundException("User with given id is not found on server!! : "+userId));
+	 // fetch rating of the above user from Rating Service
+	 // http://localhost:9496/ratings/users/92b7b198-da51-41b0-bdd6-cf77c4fde9e2
+	 ArrayList<Rating> ratingsOfUser = restTemplate.getForObject("http://localhost:9496/ratings/users/"+user.getUserId(), ArrayList.class);
+	 logger.info("{}",ratingsOfUser);
+	 user.setRatings(ratingsOfUser);
+	 return user;
+	}
+
+	@Override
+	public void deleteUser(String userId) {
+		// TODO Auto-generated method stub
+		User user = this.userRepository.findById(userId).orElseThrow(()->new ResourceNotFoundException("User with given id is not found on server!! : "+userId));
+		this.userRepository.delete(user);
+	}
+
+	@Override
+	public User updateUser(User user, String userId) {
+		// TODO Auto-generated method stub
+		User user1 = this.userRepository.findById(userId).orElseThrow(()->new ResourceNotFoundException("User with given id is not found on server!! : "+userId));
+		user1.setUserId(user.getUserId());
+		user1.setName(user.getName());
+		user1.setEmail(user.getEmail());
+		user1.setAbout(user.getAbout());
+		User savedUser = this.userRepository.save(user1);
+		return savedUser;
+	}
+	
+}

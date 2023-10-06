@@ -1,0 +1,26 @@
+package com.lcwd.rating.service;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import com.lcwd.rating.service.entities.Rating;
+import com.lcwd.rating.service.services.RatingService;
+
+@SpringBootTest
+class RatingServiceApplicationTests {
+	
+	@Aut
+	private RatingService ratingService;
+
+	@Test
+	void contextLoads() {
+	}
+	
+	void createRating() {
+		Rating rating = Rating.builder().rating(10).userId("").hotelId("").feedback("this is feedback using feign client").build();
+		Rating savedRating = ratingService.createRating(rating);
+		
+		System.out.println("New rating created");
+	}
+
+}
